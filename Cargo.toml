@@ -1,0 +1,16 @@
+[package]
+name = "swarmcret"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+
+[dev-dependencies]
+tempfile = "3.3.0"
+
+[profile.release]
+opt-level = 'z'
+lto = true
+codegen-units = 1
+panic = 'abort'
+strip = true
