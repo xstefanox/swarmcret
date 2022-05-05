@@ -3,9 +3,9 @@ name: "Build"
 on:
   push:
     branches:
-      - master
+      - "**"
     tags:
-      - "*"
+      - "**"
 
 jobs:
   docker-image:
@@ -33,5 +33,5 @@ jobs:
       - name: "Build and push"
         uses: docker/build-push-action@v2
         with:
-          push: true
+          push: ${{ github.ref == 'refs/heads/master' }}
           tags: xstefanox/swarmcret:${{ steps.image_version.outputs.IMAGE_VERSION }}
