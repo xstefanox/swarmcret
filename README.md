@@ -20,6 +20,10 @@ Docker Swarm is currently lacking this feature, because it only allows to mount
 Swarmcret is a solution that can be used to adapt configuration mounted in the filesystem into a set
 of environment variables.
 
+## Origin of the name
+
+"Swarmcret" is the portmanteau of "swarm" and "secret" and it is also the Frison translation for "swarm".
+
 ## How to use
 
 1. Mount your secrets in `/var/run/secrets` path
