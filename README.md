@@ -28,7 +28,15 @@ of environment variables.
 
 1. Mount your secrets in `/var/run/secrets` path
 2. Mount your configs in `/var/run/configs` path
-3. Put Swarmcret in the image entrypoint
+3. Load the Swarmcret Docker image into a multi-stage Dockerfile:
+
+   ```dockerfile
+   FROM xstefanox/swarmcret:1.0 as swarmcret
+
+   # then in the production stage...
+   COPY --from=swarmcret /swarmcret /usr/local/bin/swarmcret
+   ```
+4. Put Swarmcret in the image entrypoint
 
    Standalone example:
    ```dockerfile
