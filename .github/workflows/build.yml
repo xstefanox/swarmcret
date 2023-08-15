@@ -43,6 +43,7 @@ jobs:
         with:
           push: ${{ github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/') }}
           tags: xstefanox/swarmcret:${{ steps.image_version.outputs.DEFAULT_IMAGE_VERSION }}
+          platforms: linux/amd64,linux/arm64
           target: default
 
       - name: "Build and push / Alpine"
@@ -50,4 +51,5 @@ jobs:
         with:
           push: ${{ github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/') }}
           tags: xstefanox/swarmcret:${{ steps.image_version.outputs.ALPINE_IMAGE_VERSION }}
+          platforms: linux/amd64,linux/arm64
           target: alpine
