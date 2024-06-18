@@ -39,7 +39,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: "Build and push / default"
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           push: ${{ github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/') }}
           tags: xstefanox/swarmcret:${{ steps.image_version.outputs.DEFAULT_IMAGE_VERSION }}
@@ -47,7 +47,7 @@ jobs:
           target: default
 
       - name: "Build and push / Alpine"
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           push: ${{ github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/') }}
           tags: xstefanox/swarmcret:${{ steps.image_version.outputs.ALPINE_IMAGE_VERSION }}
