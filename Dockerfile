@@ -1,4 +1,4 @@
-FROM rust:1.71-slim AS build-default
+FROM rust:1.79-slim-bullseye AS build-default
 RUN apt-get update && apt-get install -y upx-ucl
 USER nobody
 WORKDIR /opt/swarmcret
@@ -7,7 +7,7 @@ RUN cargo test
 RUN cargo build --release
 RUN upx --best --lzma target/release/swarmcret
 
-FROM rust:1.71.0-alpine3.18 AS build-alpine
+FROM rust:1.79.0-alpine3.20 AS build-alpine
 RUN apk add upx
 USER nobody
 WORKDIR /opt/swarmcret
