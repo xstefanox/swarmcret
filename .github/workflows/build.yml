@@ -53,7 +53,7 @@ jobs:
       - name: "Build and push / default"
         uses: docker/build-push-action@v6
         with:
-          tags: xstefanox/swarmcret:${{ steps.image_version.outputs.DEFAULT_IMAGE_VERSION }}
+          tags: ${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ steps.image_version.outputs.DEFAULT_IMAGE_VERSION }}
           platforms: linux/amd64,linux/arm64
           target: default
           outputs: type=${{ steps.image_version.outputs.BUILD_OUTPUT }}
@@ -61,7 +61,7 @@ jobs:
       - name: "Build and push / Alpine"
         uses: docker/build-push-action@v6
         with:
-          tags: xstefanox/swarmcret:${{ steps.image_version.outputs.ALPINE_IMAGE_VERSION }}
+          tags: ${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ steps.image_version.outputs.ALPINE_IMAGE_VERSION }}
           platforms: linux/amd64,linux/arm64
           target: alpine
           outputs: type=${{ steps.image_version.outputs.BUILD_OUTPUT }}
