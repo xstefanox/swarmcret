@@ -9,9 +9,6 @@ use std::path::Path;
 mod command_runner;
 mod secret_loader;
 
-#[cfg(test)]
-mod test_macros;
-
 fn main() -> Result<(), String> {
     let result = load_and_run();
 
