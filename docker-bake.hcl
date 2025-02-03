@@ -1,15 +1,11 @@
-variable "SHA" {
-  default = ""
-}
-
-variable "PLATFORM_TAG" {
+variable "BASE_IMAGE_NAME" {
   default = ""
 }
 
 target "default" {
   target = "default"
   tags = [
-    "ghcr.io/xstefanox/swarmcret:${SHA}-${PLATFORM_TAG}-default",
+    "${BASE_IMAGE_NAME}-default",
   ]
   cache-from = [
     "type=gha",
@@ -22,7 +18,7 @@ target "default" {
 target "alpine" {
   target = "alpine"
   tags = [
-    "ghcr.io/xstefanox/swarmcret:${SHA}-${PLATFORM_TAG}-alpine",
+    "${BASE_IMAGE_NAME}-alpine",
   ]
   cache-from = [
     "type=gha",

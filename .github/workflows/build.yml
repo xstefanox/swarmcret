@@ -7,63 +7,19 @@ on:
 
 jobs:
 
-  build:
-    name: "Docker image (${{ matrix.platform.name }})"
-    strategy:
-      matrix:
-        platform:
-          - name: linux/amd64
-            runner: ubicloud-standard-2
-          - name: linux/arm64
-            runner: ubicloud-standard-2-arm
-    runs-on: ${{ matrix.platform.runner }}
-
-    steps:
-
-      - name: "Setup"
-        run: |
-          PLATFORM=${{ matrix.platform.name }}
-          PLATFORM_TAG=${PLATFORM/\//-}
-          echo PLATFORM_TAG=${PLATFORM_TAG} >> $GITHUB_ENV
-
-      - name: "Checkout"
-        uses: actions/checkout@v4
-
-      - name: "Short SHA calculation"
-        uses: benjlevesque/short-sha@v3.0
-
-      - name: "GitHub Container Registry authentication"
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: "Docker Buildx setup"
-        uses: docker/setup-buildx-action@v3
-
-      - name: "Docker image build"
-        uses: docker/bake-action@v6
-        env:
-          SHA: ${{ env.SHA }}
-          PLATFORM_TAG: ${{ env.PLATFORM_TAG }}
-        with:
-          push: true
-          files: docker-bake.hcl
-          targets: |
-            default
-            alpine
-          set: |
-            *.platform=${{ matrix.platform.name }}
-
-  multiarch:
-    name: "Multiarch Docker image"
+  setup:
+    name: "Setup"
     runs-on: ubuntu-latest
-    needs:
-      - build
+    outputs:
+      ghcrImage: ${{ steps.env.outputs.GHCR_IMAGE }}
+      dockerHubImage: ${{ steps.env.outputs.DOCKERHUB_IMAGE }}
+      defaultLatestTag: ${{ steps.env.outputs.DEFAULT_LATEST_TAG }}
+      alpineLatestTag: ${{ steps.env.outputs.ALPINE_LATEST_TAG }}
+      shortSha: ${{ steps.shortSha.outputs.sha }}
     steps:
 
-      - name: "Setup"
+      - name: "Environment variables"
+        id: env
         run: |
           DEFAULT_BRANCH_NAME=${{ github.event.repository.default_branch }}
           BRANCH_NAME=${{ github.ref_name }}
@@ -80,13 +36,69 @@ jobs:
             ALPINE_LATEST_TAG=${SANITIZED_BRANCH_NAME}-alpine
           fi
           
-          echo GHCR_IMAGE=${GHCR_IMAGE} >> ${GITHUB_ENV}
-          echo DOCKERHUB_IMAGE=${DOCKERHUB_IMAGE} >> ${GITHUB_ENV}
-          echo DEFAULT_LATEST_TAG=${DEFAULT_LATEST_TAG} >> ${GITHUB_ENV}
-          echo ALPINE_LATEST_TAG=${ALPINE_LATEST_TAG} >> ${GITHUB_ENV}
+          echo GHCR_IMAGE=${GHCR_IMAGE} >> ${GITHUB_OUTPUT}
+          echo DOCKERHUB_IMAGE=${DOCKERHUB_IMAGE} >> ${GITHUB_OUTPUT}
+          echo DEFAULT_LATEST_TAG=${DEFAULT_LATEST_TAG} >> ${GITHUB_OUTPUT}
+          echo ALPINE_LATEST_TAG=${ALPINE_LATEST_TAG} >> ${GITHUB_OUTPUT}
 
       - name: "Short SHA calculation"
+        id: shortSha
         uses: benjlevesque/short-sha@v3.0
+
+  build:
+    name: "Docker image (${{ matrix.platform.name }})"
+    runs-on: ${{ matrix.platform.runner }}
+    needs:
+      - setup
+    strategy:
+      matrix:
+        platform:
+          - name: linux/amd64
+            runner: ubicloud-standard-2
+          - name: linux/arm64
+            runner: ubicloud-standard-2-arm
+
+    steps:
+
+      - name: "Setup"
+        run: |
+          PLATFORM=${{ matrix.platform.name }}
+          PLATFORM_TAG=${PLATFORM/\//-}
+          echo PLATFORM_TAG=${PLATFORM_TAG} >> $GITHUB_ENV
+
+      - name: "Checkout"
+        uses: actions/checkout@v4
+
+      - name: "GitHub Container Registry authentication"
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Docker Buildx setup"
+        uses: docker/setup-buildx-action@v3
+
+      - name: "Docker image build"
+        uses: docker/bake-action@v6
+        env:
+          BASE_IMAGE_NAME: ${{ needs.setup.outputs.ghcrImage }}:${{ needs.setup.outputs.shortSha }}-${{ env.PLATFORM_TAG }}
+        with:
+          push: true
+          files: docker-bake.hcl
+          targets: |
+            default
+            alpine
+          set: |
+            *.platform=${{ matrix.platform.name }}
+
+  multiarch:
+    name: "Multiarch Docker image"
+    runs-on: ubuntu-latest
+    needs:
+      - setup
+      - build
+    steps:
 
       - name: "Docker Buildx setup"
         uses: docker/setup-buildx-action@v3
@@ -100,23 +112,28 @@ jobs:
 
       - name: "Image creation"
         run: >
-          docker buildx imagetools create
-          --tag ${{ env.GHCR_IMAGE }}:${{ env.SHA }}
-          ${{ env.GHCR_IMAGE }}:${{ env.SHA }}-linux-amd64-default
-          ${{ env.GHCR_IMAGE }}:${{ env.SHA }}-linux-arm64-default
+          SHA=${{ needs.setup.outputs.shortSha }}
+          GHCR_IMAGE=${{ needs.setup.outputs.ghcrImage }}
+          DEFAULT_LATEST_TAG=${{ needs.setup.outputs.defaultLatestTag }}
+          ALPINE_LATEST_TAG=${{ needs.setup.outputs.alpineLatestTag }}
 
           docker buildx imagetools create
-          --tag ${{ env.GHCR_IMAGE }}:${{ env.SHA }}-alpine
-          ${{ env.GHCR_IMAGE }}:${{ env.SHA }}-linux-amd64-alpine
-          ${{ env.GHCR_IMAGE }}:${{ env.SHA }}-linux-arm64-alpine
+          --tag ${GHCR_IMAGE}:${SHA}
+          ${GHCR_IMAGE}:${SHA}-linux-amd64-default
+          ${GHCR_IMAGE}:${SHA}-linux-arm64-default
+
+          docker buildx imagetools create
+          --tag ${GHCR_IMAGE}:${SHA}-alpine
+          ${GHCR_IMAGE}:${SHA}-linux-amd64-alpine
+          ${GHCR_IMAGE}:${SHA}-linux-arm64-alpine
           
           docker buildx imagetools create
-          --tag ${{ env.GHCR_IMAGE }}:${{ env.DEFAULT_LATEST_TAG }}
-          ${{ env.GHCR_IMAGE }}:${{ env.SHA }}
+          --tag ${GHCR_IMAGE}:${DEFAULT_LATEST_TAG}
+          ${GHCR_IMAGE}:${SHA}
           
           docker buildx imagetools create
-          --tag ${{ env.GHCR_IMAGE }}:${{ env.ALPINE_LATEST_TAG }}
-          ${{ env.GHCR_IMAGE }}:${{ env.SHA }}-alpine
+          --tag ${GHCR_IMAGE}:${ALPINE_LATEST_TAG}
+          ${GHCR_IMAGE}:${SHA}-alpine
 
       - name: "Login to DockerHub"
         uses: docker/login-action@v3
@@ -128,10 +145,15 @@ jobs:
       - name: "Image publication"
         if: github.ref_name == github.event.repository.default_branch
         run: >
-          docker buildx imagetools create
-          --tag ${{ env.DOCKERHUB_IMAGE }}:${{ env.DEFAULT_LATEST_TAG }}
-          ${{ env.GHCR_IMAGE }}:${{ env.DEFAULT_LATEST_TAG }}
+          GHCR_IMAGE=${{ needs.setup.outputs.ghcrImage }}
+          DOCKERHUB_IMAGE=${{ needs.setup.outputs.dockerHubImage }}
+          DEFAULT_LATEST_TAG=${{ needs.setup.outputs.defaultLatestTag }}
+          ALPINE_LATEST_TAG=${{ needs.setup.outputs.alpineLatestTag }}
           
           docker buildx imagetools create
-          --tag ${{ env.DOCKERHUB_IMAGE }}:${{ env.ALPINE_LATEST_TAG }}
-          ${{ env.GHCR_IMAGE }}:${{ env.ALPINE_LATEST_TAG }}
+          --tag ${DOCKERHUB_IMAGE}:${DEFAULT_LATEST_TAG}
+          ${GHCR_IMAGE}:${DEFAULT_LATEST_TAG}
+          
+          docker buildx imagetools create
+          --tag ${DOCKERHUB_IMAGE}:${ALPINE_LATEST_TAG}
+          ${GHCR_IMAGE}:${ALPINE_LATEST_TAG}
