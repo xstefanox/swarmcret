@@ -67,7 +67,7 @@ jobs:
           echo PLATFORM_TAG=${PLATFORM_TAG} >> $GITHUB_ENV
 
       - name: "Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: "GitHub Container Registry authentication"
         uses: docker/login-action@v3
