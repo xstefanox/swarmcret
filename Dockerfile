@@ -1,4 +1,4 @@
-FROM rust:1.91-slim-trixie AS build-default
+FROM rust:1.92-slim-trixie AS build-default
 RUN apt-get update && apt-get install -y upx-ucl
 USER nobody
 WORKDIR /opt/swarmcret
@@ -7,7 +7,7 @@ RUN cargo test
 RUN cargo build --release
 RUN upx --best --lzma target/release/swarmcret
 
-FROM rust:1.91.1-alpine3.22 AS build-alpine
+FROM rust:1.92.0-alpine3.22 AS build-alpine
 RUN apk add upx musl-dev
 USER nobody
 WORKDIR /opt/swarmcret
