@@ -29,8 +29,8 @@ macro_rules! merge {
 }
 
 pub fn load_all(root: &Path) -> Result<HashMap<OsString, String>, FilesystemError> {
-    let configs = load_from_path(root, "var/run/configs")?;
-    let secrets = load_from_path(root, "var/run/secrets")?;
+    let configs = load_from_path(root, "run/configs")?;
+    let secrets = load_from_path(root, "run/secrets")?;
     Ok(merge!(configs, secrets))
 }
 
