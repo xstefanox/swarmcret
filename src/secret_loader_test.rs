@@ -10,7 +10,7 @@ use std::fs::File;
 use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
-use assert2::{check, let_assert};
+use assert2::{assert, check};
 
 #[test]
 fn load_all_with_no_directories_should_produce_an_empty_map() {
@@ -18,7 +18,7 @@ fn load_all_with_no_directories_should_produce_an_empty_map() {
 
     let result = load_all(root.path());
 
-    let_assert!(Ok(secrets) = result);
+    assert!(let Ok(secrets) = result);
     check!(secrets.is_empty());
 }
 
@@ -32,7 +32,7 @@ fn load_all_with_only_configs_should_return_configs() {
 
     let result = load_all(root.path());
 
-    let_assert!(Ok(values) = result);
+    assert!(let Ok(values) = result);
     check!(values == HashMap::from([(OsString::from("A_CONFIG"), "a_config_value".to_string())]));
 }
 
@@ -46,7 +46,7 @@ fn load_all_with_only_secrets_should_return_secrets() {
 
     let result = load_all(root.path());
 
-    let_assert!(Ok(values) = result);
+    assert!(let Ok(values) = result);
     check!(values == HashMap::from([(OsString::from("A_SECRET"), "a_secret_value".to_string())]));
 }
 
@@ -64,7 +64,7 @@ fn load_all_merges_configs_and_secrets() {
 
     let result = load_all(root.path());
 
-    let_assert!(Ok(values) = result);
+    assert!(let Ok(values) = result);
     check!(
         values
             == HashMap::from([
@@ -88,7 +88,7 @@ fn load_all_secrets_override_configs_on_conflict() {
 
     let result = load_all(root.path());
 
-    let_assert!(Ok(values) = result);
+    assert!(let Ok(values) = result);
     check!(values == HashMap::from([(OsString::from("SHARED_KEY"), "secret_value".to_string())]));
 }
 
@@ -98,7 +98,7 @@ fn no_secrets_directory_should_produce_an_empty_map() {
 
     let result = load_from_path(root.path(), "run/secrets");
 
-    let_assert!(Ok(secrets) = result);
+    assert!(let Ok(secrets) = result);
     check!(secrets.is_empty());
 }
 
@@ -113,7 +113,7 @@ fn fail_if_secrets_path_is_not_a_directory() {
 
     let result = load_from_path(root.path(), "run/secrets");
 
-    let_assert!(Err(error) = result);
+    assert!(let Err(error) = result);
     check!(error == NotDirectory(secrets_path));
 }
 
@@ -125,7 +125,7 @@ fn empty_secrets_directory_should_produce_an_empty_map() {
 
     let result = load_from_path(root.path(), "run/secrets");
 
-    let_assert!(Ok(secrets) = result);
+    assert!(let Ok(secrets) = result);
     check!(secrets.is_empty());
 }
 
@@ -137,7 +137,7 @@ fn fail_if_secret_entry_is_a_directory() {
 
     let result = load_from_path(root.path(), "run/secrets");
 
-    let_assert!(Err(error) = result);
+    assert!(let Err(error) = result);
     check!(error == NotFile(secrets_path));
 }
 
@@ -152,7 +152,7 @@ fn a_valid_secret_should_be_returned() {
 
     let result = load_from_path(root.path(), "run/secrets");
 
-    let_assert!(Ok(secrets) = result);
+    assert!(let Ok(secrets) = result);
     check!(secrets == HashMap::from([("A_SECRET".into(), "a_secret_value".to_string())]));
 }
 
@@ -167,7 +167,7 @@ fn fail_if_secrets_directory_is_not_readable() {
 
     let result = load_from_path(root.path(), "run/secrets");
 
-    let_assert!(Err(error) = result);
+    assert!(let Err(error) = result);
     check!(error == Unreadable(secrets_path));
 }
 
@@ -184,6 +184,6 @@ fn fail_if_secret_file_is_not_readable() {
 
     let result = load_from_path(root.path(), "run/secrets");
 
-    let_assert!(Err(error) = result);
+    assert!(let Err(error) = result);
     check!(error == Unreadable(secret_path));
 }

@@ -1,4 +1,4 @@
-use assert2::{check, let_assert};
+use assert2::{assert, check};
 use crate::command_runner::CommandError::NoCommandToExecute;
 use crate::command_runner::{parse_command_line, Process};
 
@@ -12,7 +12,7 @@ fn do_not_build_a_process_if_no_arguments_given() {
 
     let result = parse_command_line(args);
 
-    let_assert!(Err(error) = result);
+    assert!(let Err(error) = result);
     check!(error == NoCommandToExecute);
 }
 
@@ -22,7 +22,7 @@ fn the_first_argument_should_be_set_as_the_executable() {
 
     let result = parse_command_line(args);
 
-    let_assert!(Ok(process) = result);
+    assert!(let Ok(process) = result);
     check!(process == Process {
             executable: "my_bin".into(),
             args: svec![]
@@ -35,7 +35,7 @@ fn the_following_arguments_should_be_set_as_executable_arguments() {
 
     let result = parse_command_line(args);
 
-    let_assert!(Ok(process) = result);
+    assert!(let Ok(process) = result);
     check!(process == Process {
             executable: "my_bin".into(),
             args: svec!["arg1", "arg2"]
