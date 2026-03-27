@@ -7,7 +7,7 @@ RUN cargo test
 RUN cargo build --release
 RUN upx --best --lzma target/release/swarmcret
 
-FROM rust:1.94.0-alpine3.22 AS build-alpine
+FROM rust:1.94.1-alpine3.22 AS build-alpine
 RUN apk add upx musl-dev
 USER nobody
 WORKDIR /opt/swarmcret
