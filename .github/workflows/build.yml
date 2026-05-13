@@ -43,7 +43,7 @@ jobs:
 
       - name: "Short SHA calculation"
         id: shortSha
-        uses: benjlevesque/short-sha@v3.0
+        uses: benjlevesque/short-sha@v4.0
 
   build:
     name: "Docker image (${{ matrix.platform.name }})"
