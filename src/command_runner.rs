@@ -36,7 +36,10 @@ impl From<CommandError> for SecretAdapterError {
 pub fn run_command<'a>(secrets: &HashMap<OsString, String>) -> Result<(), SecretAdapterError> {
     let args = env::args().collect();
     let process = parse_command_line(args)?;
+    fork(process, secrets)
+}
 
+fn fork(process: Process, secrets: &HashMap<OsString, String>) -> Result<(), SecretAdapterError> {
     let command_error = Command::new(process.executable)
         .args(process.args)
         .envs(secrets)
